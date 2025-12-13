@@ -1,0 +1,17 @@
+{
+  "name": "my-ai-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test-openai.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "openai": "^6.10.0"
+  }
+}
