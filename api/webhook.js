@@ -1,11 +1,4 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
-
-  console.log('LINE webhook received');
-  console.log(JSON.stringify(req.body, null, 2));
-
- 
-  res.status(200).json({ ok: true });
+export default function handler(req, res) {
+  console.log("HIT /api/webhook", req.method);
+  res.status(200).json({ ok: true, method: req.method });
 }
