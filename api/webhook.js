@@ -1,4 +1,9 @@
 export default function handler(req, res) {
-  console.log("HIT /api/webhook", req.method);
-  res.status(200).json({ ok: true, method: req.method });
+  if (req.method !== "POST") {
+    return res.status(200).send("OK");
+  }
+
+  console.log("LINE webhook HIT");
+
+  res.status(200).json({ status: "ok" });
 }
