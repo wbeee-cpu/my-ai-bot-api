@@ -20,21 +20,27 @@ export default async function handler(req, res) {
   const replyToken = event?.replyToken;
   const userText = event?.message?.text;
 
-  if (!replyToken) return res.status(200).json({ ok: true });
+if (!replyToken) return res.status(200).json({ ok: true, note: "no replyToken" });
 
-  await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      replyToken,
-      messages: [
-        { type: "text", text: `收到：${userText ?? "事件"}` },
-      ],
-    }),
-  });
+const r = await fetch("https://api.line.me/v2/bot/message/reply", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
+  },
+  body: JSON.stringify({
+    replyToken,
+    messages: [{ type: "text", text: `收到：${userText ?? "事件"}` }],
+  }),
+});
 
-  return res.status(200).json({ ok: true });
+const t = await r.text();
+console.log("REPLY_STATUS:", r.status);
+console.log("REPLY_BODY:", t);
+
+if (!r.ok) {
+  // 讓你在 Logs 一眼看到失敗
+  return res.status(500).send(`Reply failed: ${r.status}`);
 }
+
+return res.status(200).json({ ok: true });
