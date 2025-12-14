@@ -1,10 +1,11 @@
 {
   "name": "my-ai-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "my-ai-bot",
   "main": "test-openai.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,15 @@
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "node-fetch": "^2.7.0",
     "openai": "^6.10.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wbeee-cpu/my-ai-bot-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wbeee-cpu/my-ai-bot-api/issues"
+  },
+  "homepage": "https://github.com/wbeee-cpu/my-ai-bot-api#readme"
 }
