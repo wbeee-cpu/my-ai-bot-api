@@ -1,3 +1,6 @@
+// === BOOT LOG：用來確認你打到的是不是最新程式 ===
+console.log("BOOT VERSION 2025-01");
+
 const crypto = require("crypto");
 const fetch = require("node-fetch");
 
@@ -7,18 +10,15 @@ module.exports = async (req, res) => {
     return res.status(200).send("OK");
   }
 
-  // 2) 讀取必要環境變數
+  // 2) 檢查環境變數是否存在（只印 true/false）
+  console.log("HAS_SECRET:", !!process.env.LINE_CHANNEL_SECRET);
+  console.log("HAS_TOKEN:", !!process.env.LINE_CHANNEL_ACCESS_TOKEN);
+
   const channelSecret = process.env.LINE_CHANNEL_SECRET;
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 
-  if (!channelSecret) {
-    console.log("ERROR: Missing LINE_CHANNEL_SECRET");
-    return res.status(500).send("Missing LINE_CHANNEL_SECRET");
-  }
-
-  if (!accessToken) {
-    console.log("ERROR: Missing LINE_CHANNEL_ACCESS_TOKEN");
-    return res.status(500).send("Missing LINE_CHANNEL_ACCESS_TOKEN");
+  if (!channelSecret || !accessToken) {
+    return res.status(500).send("Missing env");
   }
 
   // 3) 驗證 LINE 簽章
@@ -31,20 +31,17 @@ module.exports = async (req, res) => {
     .digest("base64");
 
   if (hash !== signature) {
-    console.log("ERROR: Invalid signature");
     return res.status(401).send("Invalid signature");
   }
 
-  // 4) 印出收到的事件（你已經看到過這個 IN）
+  // 4) 印出收到的事件（IN）
   console.log("IN:", JSON.stringify(req.body));
 
   const event = req.body?.events?.[0];
   const replyToken = event?.replyToken;
 
-  // 有些事件沒有 replyToken（例如 follow）
   if (!replyToken) {
-    console.log("No replyToken");
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, note: "no replyToken" });
   }
 
   const userText =
