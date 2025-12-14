@@ -1,3 +1,5 @@
+console.log("WEBHOOK_VERSION = OPENAI_V1");
+
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
