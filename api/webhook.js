@@ -1,4 +1,4 @@
-console.log("WEBHOOK_VERSION = CUSTOMER_SERVICE_PRO_V2_CJS");
+console.log("WEBHOOK_VERSION = CUSTOMER_SERVICE_PRO_V3_CJS");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -16,30 +16,18 @@ module.exports = async function handler(req, res) {
 
       const replyToken = event.replyToken;
       const userText = event.message.text;
+
       console.log("incoming text:", userText);
 
-      // 1) 預設 fallback：OpenAI 任何問題都回這句
-      let aiText = "好的，請提供訂單編號，我幫您查詢配送狀態。";
+      // fallback（OpenAI 掛掉/超時時一定回）
+      let aiText = "好的，請提供訂單編號，我這邊為您確認配送狀態。";
 
-      // 2) OpenAI：最多 2.5 秒，超過就直接用 fallback
+      // OpenAI（縮短等待，避免 replyToken 過期）
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 2500);
 
-        const oa = await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            input: [
-              {
-                role: "system",
-                content:
-                  "你是一位成熟、專業的客服人員，負責第一線對外回覆。
+        const systemPrompt = `你是一位成熟、專業的客服人員，負責第一線對外回覆。
 
 整體原則：
 - 語氣禮貌、自然、冷靜
@@ -64,10 +52,9 @@ module.exports = async function handler(req, res) {
 - 不寫說明文、不寫背景、不補心理感受
 
 語氣細節：
-- 可偶爾在句尾使用「喔」作為柔化，一則回覆最多一次
+- 可偶爾在句尾使用「喔」作柔化，一則回覆最多一次
 - 不使用表情符號
 - 不使用波浪符號（～）
-- 不使用過度完美或模板化語句
 
 SOP：商品損壞 / 瑕疵 / 缺件
 - 先確認是哪一項商品與問題狀況
@@ -88,18 +75,23 @@ SOP：退款 / 換貨要求
 - 不直接答應退款或換貨
 
 隱性轉交原則（非常重要）：
-- 當問題需要人工判斷、檢視照片或涉及例外時：
-  - 不說「轉人工客服」
-  - 不說「轉接」
-  - 不承諾即時回覆
-- 使用自然的內部交接說法，例如：
-  - 「這個狀況需要進一步確認，這邊已為您轉交相關單位處理。」
-  - 「資料已收到，後續將於工作天內與您聯絡。」
+- 不說「轉人工客服」「轉接」
+- 不承諾即時回覆
+- 使用內部交接說法，例如：
+  - 「這個狀況需要進一步確認，這邊為您轉交相關單位處理。」
+  - 「資料已收到，後續將於工作天內與您聯絡。」`;
 
-目標：
-讓對方感覺是在與一位有經驗的真人客服對話，
-而不是被系統或機器流程回應。",
-              },
+        const oa = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            input: [
+              { role: "system", content: systemPrompt },
               { role: "user", content: userText },
             ],
           }),
@@ -121,14 +113,12 @@ SOP：退款 / 換貨要求
             aiText;
         } else {
           console.log("openai error:", JSON.stringify(oaJson));
-          // aiText 保持 fallback
         }
       } catch (oaErr) {
         console.log("openai exception:", String(oaErr));
-        // aiText 保持 fallback
       }
 
-      // 3) 回 LINE（一定要做 + 印出失敗原因）
+      // 回 LINE
       try {
         const resp = await fetch("https://api.line.me/v2/bot/message/reply", {
           method: "POST",
